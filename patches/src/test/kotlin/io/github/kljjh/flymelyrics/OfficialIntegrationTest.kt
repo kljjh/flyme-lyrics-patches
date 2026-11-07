@@ -39,7 +39,15 @@ class OfficialIntegrationTest {
 
     @Test fun hooksActualOfficialDexAndRoundTrips() {
         val all = officialClasses()
-        assertTrue(all.single { it.type == OfficialHooks.UTILS }.methods.any { it.name == "getContext" && it.parameterTypes.isEmpty() })
+        // The official bundle contains shared Utils copies in several app extensions.
+        val utils = all.filter { it.type == OfficialHooks.UTILS }
+        assertTrue(utils.isNotEmpty())
+        utils.forEach { cls -> assertTrue(cls.methods.any {
+            it.name == "getContext" && it.parameterTypes.isEmpty() && it.returnType == "Landroid/content/Context;"
+        }) }
+        assertTrue(all.single { it.type == OfficialHooks.PANEL_INSTALLER }.methods.any {
+            it.name == "onTabSelected" && it.parameterTypes.map { p -> p.toString() } == listOf("Landroid/view/ViewGroup;")
+        })
         val cls = MutableClass(all.single { it.type == OfficialHooks.LOCKSCREEN })
         val originalCount = cls.methods.size
         OfficialHooks.instrument(cls)
