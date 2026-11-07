@@ -18,6 +18,7 @@ import com.android.tools.smali.dexlib2.writer.io.MemoryDataStore
 import com.android.tools.smali.dexlib2.writer.pool.DexPool
 import org.junit.Test
 import java.io.File
+import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.zip.ZipFile
 import kotlin.test.*
@@ -31,7 +32,7 @@ class OfficialIntegrationTest {
             MessageDigest.getInstance("SHA-256").digest(file.readBytes()).joinToString("") { "%02x".format(it) })
         return ZipFile(file).use { zip ->
             zip.entries().asSequence().filter { it.name.endsWith(".mpe") }.flatMap { entry ->
-                DexBackedDexFile(Opcodes.getDefault(), zip.getInputStream(entry).readBytes()).classes.asSequence()
+                DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(zip.getInputStream(entry).readBytes())).classes.asSequence()
             }.toList()
         }
     }
@@ -48,7 +49,7 @@ class OfficialIntegrationTest {
         assertTrue(calls.any { it.definingClass == OfficialHooks.BRIDGE && it.name == "onPlaybackState" })
         val store = MemoryDataStore()
         DexPool.writeTo(store, ImmutableDexFile(Opcodes.getDefault(), listOf(cls)))
-        val rewritten = DexBackedDexFile(Opcodes.getDefault(), store.data).classes.single()
+        val rewritten = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(store.data)).classes.single()
         assertEquals(cls.methods.size, rewritten.methods.count())
         val output = File("build/test-results/official-lockscreen-patched.dex")
         output.parentFile.mkdirs()

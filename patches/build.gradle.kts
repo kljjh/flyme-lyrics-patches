@@ -28,6 +28,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 tasks.test {
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
     systemProperty("officialBundle", rootProject.file("work/official/patches-2.1.0.mpp").absolutePath)
 }
 tasks.processResources {
