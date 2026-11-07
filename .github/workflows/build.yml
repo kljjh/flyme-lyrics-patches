@@ -85,7 +85,7 @@ jobs:
           cat > release-notes.md <<'EOF'
           Independent Flyme add-on: this source now contains only **Flyme status bar lyrics**.
 
-          In the same patching run, select **Third-party lyrics from the OFFICIAL Morphe source** and **Flyme status bar lyrics from this source**. Enable the official third-party and lock-screen lyric settings. No separate Flyme setting is needed. Missing official hooks produce an explicit patch error; Morphe cannot auto-select dependencies across sources.
+          In the same patching run, select **Third-party lyrics from the OFFICIAL Morphe source** and **Flyme status bar lyrics from this source**. Enable the official third-party lyrics setting and the independent Flyme status bar lyrics setting. The add-on reads the official mini-player text without depending on the official mini-player switch. Missing official hooks produce an explicit patch error; Morphe cannot auto-select dependencies across sources.
 
           Validation: notification behavior tests, integration against the unmodified official v2.1.0 extension DEX, DEX round-trip and dexdump, full Android compilation, and checks that no official patches or extensions are bundled. Real Flyme device and full YT Music APK patch/install verification are still required.
           EOF

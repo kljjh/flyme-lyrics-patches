@@ -13,7 +13,7 @@ import android.util.Log;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
-/** Receives the official lock-screen module's events and already formatted text. */
+/** Receives official media events and the already formatted mini-player text. */
 public final class FlymeLyrics {
     private static final String OWNER = "community.flymelyrics.owned";
     private static final String ADDED_NO_CLEAR = "community.flymelyrics.added_no_clear";
@@ -27,6 +27,24 @@ public final class FlymeLyrics {
     private static String lastArtist;
 
     private FlymeLyrics() { }
+
+    public static void ensureSettings() {
+        try {
+            Class.forName("io.github.kljjh.flymelyrics.FlymeLyricsSettings");
+        } catch (Exception | LinkageError ignored) {
+            // The setting class is optional to the notification bridge tests.
+        }
+    }
+
+    private static boolean isEnabled() {
+        try {
+            Class<?> settings = Class.forName("io.github.kljjh.flymelyrics.FlymeLyricsSettings");
+            Object setting = settings.getField("ENABLED").get(null);
+            return (Boolean) setting.getClass().getMethod("get").invoke(setting);
+        } catch (Exception | LinkageError ignored) {
+            return true;
+        }
+    }
 
     private static int readFlag(String name) {
         try {
@@ -68,9 +86,10 @@ public final class FlymeLyrics {
         if (!playing) clear(context);
     }
 
-    /** Runs after the official enabled/matching checks and before its title deduplication. */
+    /** Runs after the official mini-player matching checks and receives its current line. */
     public static synchronized void onLine(Context context, MediaSession session, String text) {
-        if (!playing || !metadataValid || session == null || !session.getSessionToken().equals(lastToken)
+        if (!isEnabled() || !playing || !metadataValid
+            || session == null || !session.getSessionToken().equals(lastToken)
                 || text == null || text.trim().isEmpty()) {
             clear(context);
             return;

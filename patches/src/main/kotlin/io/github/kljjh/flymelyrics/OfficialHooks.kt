@@ -19,9 +19,11 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
 
 internal object OfficialHooks {
     const val LOCKSCREEN = "Lapp/morphe/extension/music/patches/lyrics/session/LockScreenLyrics;"
+    const val MINIPLAYER = "Lapp/morphe/extension/music/patches/lyrics/session/MiniplayerLyrics;"
     const val UTILS = "Lapp/morphe/extension/shared/Utils;"
     const val BRIDGE = "Lio/github/kljjh/flymelyrics/FlymeLyrics;"
     const val PANEL_INSTALLER = "Lapp/morphe/extension/music/patches/lyrics/ui/LyricsPanelInstaller;"
+    private const val LYRICS_MANAGER = "Lapp/morphe/extension/music/patches/lyrics/LyricsManager;"
     private const val SESSION = "Landroid/media/session/MediaSession;"
     private const val METADATA = "Landroid/media/MediaMetadata;"
     private const val STATE = "Landroid/media/session/PlaybackState;"
@@ -51,31 +53,14 @@ internal object OfficialHooks {
             cls.methods.singleOrNull { it.name == name && it.parameterTypes.map { t -> t.toString() } == parameters && it.returnType == result && AccessFlags.STATIC.isSet(it.accessFlags) && it.implementation != null }
                 ?: fail("missing static $name")
         if (cls.methods.any { it.name.startsWith(PREFIX) }) fail("add-on is already present; use an original APK")
-        val push = method("push")
         val metadata = method("onMediaSessionSetMetadata", listOf(SESSION, METADATA))
         val playback = method("onPlaybackState", listOf(STATE))
-        val restore = method("restoreIfPushed")
-        val tick = method("tick")
         method("mediaSession", result = SESSION)
-        method("getCurrentLine", result = "Ljava/lang/String;")
-        val lineIndex = push.calls(LOCKSCREEN, "getCurrentLine", emptyList(), "Ljava/lang/String;").singleOrNull()
-            ?: fail("getCurrentLine call is not unique")
-        val next = push.implementation!!.instructions.elementAtOrNull(lineIndex + 1)
-        if (next?.opcode != Opcode.MOVE_RESULT_OBJECT) fail("lyric return register changed")
-        val lineRegister = (next as OneRegisterInstruction).registerA
-        val tickerType = "Lapp/morphe/extension/music/patches/lyrics/session/LyricsTicker;"
-        val stops = cls.methods.map { it to it.calls(tickerType, "stop", emptyList(), "V") }.filter { it.second.isNotEmpty() }
-        if (stops.sumOf { it.second.size } < 2) fail("ticker cleanup points changed")
-        val tickErrors = tick.implementation!!.instructions.withIndex().filter { (_, i) ->
-            val ref = (i as? ReferenceInstruction)?.reference as? MethodReference
-            ref?.definingClass == "Lapp/morphe/extension/shared/Logger;" && ref.name == "printException"
-        }.map { it.index }
-        if (tickErrors.size != 1) fail("ticker error handler changed")
 
         fun helper(name: String, params: List<String>, registers: Int, code: String) {
             cls.methods.add(ImmutableMethod(LOCKSCREEN, PREFIX + name,
                 params.map { ImmutableMethodParameter(it, emptySet(), null) }, "V",
-                AccessFlags.PRIVATE.value or AccessFlags.STATIC.value or AccessFlags.SYNTHETIC.value,
+                AccessFlags.STATIC.value or AccessFlags.SYNTHETIC.value,
                 emptySet(), null, MutableMethodImplementation(registers)).toMutable().apply { addInstructions(0, code) })
         }
         helper("Emit", listOf("Ljava/lang/String;"), 3, """
@@ -107,13 +92,40 @@ internal object OfficialHooks {
         // Calculate every insertion against original instruction indices, then insert backwards.
         val insertions = mutableMapOf<MutableMethod, MutableList<Pair<Int, String>>>()
         fun at(m: MutableMethod, index: Int, code: String) { insertions.getOrPut(m) { mutableListOf() }.add(index to code) }
-        val clear = "invoke-static {}, $LOCKSCREEN->${PREFIX}Clear()V"
-        at(push, lineIndex + 2, "invoke-static/range {v$lineRegister .. v$lineRegister}, $LOCKSCREEN->${PREFIX}Emit(Ljava/lang/String;)V")
         at(metadata, 0, "invoke-static/range {p0 .. p1}, $LOCKSCREEN->${PREFIX}Metadata($SESSION$METADATA)V")
         at(playback, 0, "invoke-static/range {p0 .. p0}, $LOCKSCREEN->${PREFIX}Playback($STATE)V")
-        at(restore, 0, clear)
-        stops.forEach { (m, indices) -> indices.forEach { at(m, it, clear) } }
-        at(tick, tickErrors.single(), clear)
         insertions.forEach { (m, edits) -> edits.sortedByDescending { it.first }.forEach { (index, code) -> m.addInstruction(index, code) } }
+    }
+
+    fun instrumentMiniplayer(cls: MutableClass) {
+        fun fail(detail: String): Nothing = throw PatchException("Unsupported official mini-player lyrics layout: $detail. Tested with official Morphe 2.1.0.")
+        fun method(name: String): MutableMethod =
+            cls.methods.singleOrNull { it.name == name && it.parameterTypes.isEmpty() && it.returnType == "V" && AccessFlags.STATIC.isSet(it.accessFlags) && it.implementation != null }
+                ?: fail("missing static $name")
+
+        val update = method("update")
+        val restore = method("restoreIfMirrored")
+        if (update.calls(LOCKSCREEN, "${PREFIX}Emit", listOf("Ljava/lang/String;"), "V").isNotEmpty() ||
+            restore.calls(LOCKSCREEN, "${PREFIX}Clear", emptyList(), "V").isNotEmpty()
+        ) fail("add-on is already present; use an original APK")
+        val lineIndex = update.calls(LYRICS_MANAGER, "getCurrentLineText", emptyList(), "Ljava/lang/String;").singleOrNull()
+            ?: fail("getCurrentLineText call is not unique")
+        val next = update.implementation!!.instructions.elementAtOrNull(lineIndex + 1)
+        if (next?.opcode != Opcode.MOVE_RESULT_OBJECT) fail("mini-player lyric return register changed")
+        val lineRegister = (next as OneRegisterInstruction).registerA
+        update.addInstruction(lineIndex + 2, "invoke-static/range {v$lineRegister .. v$lineRegister}, $LOCKSCREEN->${PREFIX}Emit(Ljava/lang/String;)V")
+        restore.addInstruction(0, "invoke-static {}, $LOCKSCREEN->${PREFIX}Clear()V")
+    }
+
+    fun instrumentSettings(cls: MutableClass) {
+        fun fail(detail: String): Nothing = throw PatchException("Unsupported official lyrics settings layout: $detail. Tested with official Morphe 2.1.0.")
+        val register = cls.methods.singleOrNull {
+            it.name == "registerSettingsListener" && it.parameterTypes.isEmpty()
+                    && it.returnType == "V" && AccessFlags.STATIC.isSet(it.accessFlags) && it.implementation != null
+        } ?: fail("missing static registerSettingsListener")
+        if (register.calls(BRIDGE, "ensureSettings", emptyList(), "V").isNotEmpty()) {
+            fail("add-on is already present; use an original APK")
+        }
+        register.addInstruction(0, "invoke-static {}, $BRIDGE->ensureSettings()V")
     }
 }

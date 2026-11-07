@@ -6,7 +6,7 @@ import app.morphe.patcher.patch.*
 @Suppress("unused")
 val flymeLyricsPatch = patch(
     name = "Flyme status bar lyrics",
-    description = "Requires Third-party lyrics from the official Morphe source, selected in the same patching run. Mirrors its lock-screen lyric text to Flyme."
+    description = "Requires Third-party lyrics from the official Morphe source and its mini-player lyrics setting. Mirrors the mini-player lyric text to Flyme."
 ) {
     compatibleWith(Compatibility(
         name = "YouTube Music",
@@ -22,6 +22,10 @@ val flymeLyricsPatch = patch(
     finalize {
         val official = classDefByOrNull(OfficialHooks.LOCKSCREEN)
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
+        val miniplayer = classDefByOrNull(OfficialHooks.MINIPLAYER)
+            ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
+        val panelInstaller = classDefByOrNull(OfficialHooks.PANEL_INSTALLER)
+            ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
         var selected = false
         classDefForEach { cls ->
             if (!cls.type.startsWith("Lapp/morphe/extension/") && !cls.type.startsWith("Lio/github/kljjh/flymelyrics/")) {
@@ -34,5 +38,7 @@ val flymeLyricsPatch = patch(
             } != false) throw PatchException("Unsupported official shared extension: Utils.getContext is missing.")
         // Validate the official API before editing. Unknown upstream layouts fail visibly.
         OfficialHooks.instrument(mutableClassDefBy(official))
+        OfficialHooks.instrumentMiniplayer(mutableClassDefBy(miniplayer))
+        OfficialHooks.instrumentSettings(mutableClassDefBy(panelInstaller))
     }
 }

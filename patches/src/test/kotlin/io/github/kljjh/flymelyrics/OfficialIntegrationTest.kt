@@ -49,12 +49,23 @@ class OfficialIntegrationTest {
             it.name == "onTabSelected" && it.parameterTypes.map { p -> p.toString() } == listOf("Landroid/view/ViewGroup;")
         })
         val cls = MutableClass(all.single { it.type == OfficialHooks.LOCKSCREEN })
+        val miniplayer = MutableClass(all.single { it.type == OfficialHooks.MINIPLAYER })
+        val panelInstaller = MutableClass(all.single { it.type == OfficialHooks.PANEL_INSTALLER })
         val originalCount = cls.methods.size
+        val originalMiniplayerCount = miniplayer.methods.size
         OfficialHooks.instrument(cls)
+        OfficialHooks.instrumentMiniplayer(miniplayer)
+        OfficialHooks.instrumentSettings(panelInstaller)
         assertEquals(originalCount + 4, cls.methods.size)
+        assertEquals(originalMiniplayerCount, miniplayer.methods.size)
         val calls = cls.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
         assertTrue(calls.any { it.definingClass == OfficialHooks.BRIDGE && it.name == "onLine" })
         assertTrue(calls.any { it.definingClass == OfficialHooks.BRIDGE && it.name == "onPlaybackState" })
+        val miniplayerCalls = miniplayer.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
+        assertTrue(miniplayerCalls.any { it.definingClass == OfficialHooks.LOCKSCREEN && it.name == "flymeLyricsAddonEmit" })
+        assertTrue(miniplayerCalls.any { it.definingClass == OfficialHooks.LOCKSCREEN && it.name == "flymeLyricsAddonClear" })
+        val settingsCalls = panelInstaller.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
+        assertTrue(settingsCalls.any { it.definingClass == OfficialHooks.BRIDGE && it.name == "ensureSettings" })
         val store = MemoryDataStore()
         DexPool.writeTo(store, ImmutableDexFile(Opcodes.getDefault(), listOf(cls)))
         val rewritten = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(store.data)).classes.single()
