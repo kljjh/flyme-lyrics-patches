@@ -22,16 +22,13 @@ val flymeLyricsPatch = patch(
     finalize {
         val official = classDefByOrNull(OfficialHooks.LOCKSCREEN)
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
-        var metadataHook = false
-        var playbackHook = false
+        var selected = false
         classDefForEach { cls ->
             if (!cls.type.startsWith("Lapp/morphe/extension/") && !cls.type.startsWith("Lio/github/kljjh/flymelyrics/")) {
-                val found = OfficialHooks.hostHooks(cls)
-                metadataHook = metadataHook || found.first
-                playbackHook = playbackHook || found.second
+                selected = selected || OfficialHooks.hostHooks(cls)
             }
         }
-        OfficialHooks.requireSelection(metadataHook, playbackHook)
+        OfficialHooks.requireSelection(selected)
         if (classDefByOrNull(OfficialHooks.UTILS)?.methods?.none {
                 it.name == "getContext" && it.parameterTypes.isEmpty() && it.returnType == "Landroid/content/Context;"
             } != false) throw PatchException("Unsupported official shared extension: Utils.getContext is missing.")

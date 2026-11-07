@@ -21,6 +21,7 @@ internal object OfficialHooks {
     const val LOCKSCREEN = "Lapp/morphe/extension/music/patches/lyrics/session/LockScreenLyrics;"
     const val UTILS = "Lapp/morphe/extension/shared/Utils;"
     const val BRIDGE = "Lio/github/kljjh/flymelyrics/FlymeLyrics;"
+    const val PANEL_INSTALLER = "Lapp/morphe/extension/music/patches/lyrics/ui/LyricsPanelInstaller;"
     private const val SESSION = "Landroid/media/session/MediaSession;"
     private const val METADATA = "Landroid/media/MediaMetadata;"
     private const val STATE = "Landroid/media/session/PlaybackState;"
@@ -35,12 +36,13 @@ internal object OfficialHooks {
                     ref.parameterTypes.map { it.toString() } == parameters && ref.returnType == result
         }?.map { it.index } ?: emptyList()
 
-    fun hostHooks(cls: ClassDef): Pair<Boolean, Boolean> =
-        cls.methods.any { it.calls(LOCKSCREEN, "onMediaSessionSetMetadata", listOf(SESSION, METADATA), "V").isNotEmpty() } to
-                cls.methods.any { it.calls(LOCKSCREEN, "onPlaybackState", listOf(STATE), "V").isNotEmpty() }
+    // This call is inserted in official lyricsPatch.execute. Media-session calls
+    // are inserted in a different finalize block and cannot establish selection here.
+    fun hostHooks(cls: ClassDef): Boolean =
+        cls.methods.any { it.calls(PANEL_INSTALLER, "onTabSelected", listOf("Landroid/view/ViewGroup;"), "V").isNotEmpty() }
 
-    fun requireSelection(metadata: Boolean, playback: Boolean) {
-        if (!metadata || !playback) throw PatchException(MISSING_OFFICIAL)
+    fun requireSelection(selected: Boolean) {
+        if (!selected) throw PatchException(MISSING_OFFICIAL)
     }
 
     fun instrument(cls: MutableClass) {

@@ -76,17 +76,16 @@ class OfficialIntegrationTest {
             addInstructions(0, """
                 const/4 v0, 0x0
                 const/4 v1, 0x0
-                invoke-static {v0, v1}, ${OfficialHooks.LOCKSCREEN}->onMediaSessionSetMetadata(Landroid/media/session/MediaSession;Landroid/media/MediaMetadata;)V
-                invoke-static {v0}, ${OfficialHooks.LOCKSCREEN}->onPlaybackState(Landroid/media/session/PlaybackState;)V
+                invoke-static {v0}, ${OfficialHooks.PANEL_INSTALLER}->onTabSelected(Landroid/view/ViewGroup;)V
                 return-void
             """)
         }
         host.methods.add(method)
-        assertEquals(true to true, OfficialHooks.hostHooks(host))
-        OfficialHooks.requireSelection(true, true)
-        for ((metadata, playback) in listOf(false to false, true to false, false to true)) {
-            assertTrue(assertFailsWith<PatchException> { OfficialHooks.requireSelection(metadata, playback) }.message!!.contains("official Morphe source"))
-        }
+        assertTrue(OfficialHooks.hostHooks(host))
+        OfficialHooks.requireSelection(true)
+        host.methods.clear()
+        assertFalse(OfficialHooks.hostHooks(host))
+        assertTrue(assertFailsWith<PatchException> { OfficialHooks.requireSelection(false) }.message!!.contains("official Morphe source"))
         assertTrue(flymeLyricsPatch.dependencies.isEmpty(), "Must not embed or link to a second copy of official patches")
     }
 }

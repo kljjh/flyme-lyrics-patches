@@ -13,7 +13,7 @@ Morphe Manager revision `6bd844d99ef9a13fcae08b68742662ff5bd19f83` loads each bu
 
 Patcher 2.3.0 `dependsOn` takes actual `Patch` objects, not a source URL or a patch-name reference. Importing official patch classes as a compile-only dependency would therefore break the manager's isolated source loading. Bundling them would recreate the duplicate-official-patch problem.
 
-The add-on instead loads independently, then in **finalize**, after every selected patch's **execute**, checks for the official lock-screen extension AND real application call sites for its metadata/playback hooks. Presence of unused official runtime classes alone is not sufficient. A missing prerequisite throws an explicit PatchException instructing the user to select official Third-party lyrics. This is a checked cross-source prerequisite, not automatic dependency selection.
+The add-on instead loads independently, then in **finalize**, after every selected patch's **execute**, checks for the official lock-screen extension AND the application call to `LyricsPanelInstaller.onTabSelected(ViewGroup)` inserted directly by official `lyricsPatch.execute`. It deliberately does not require media-session host calls at this point, because another official finalize block inserts those later. Presence of unused official runtime classes alone is not sufficient. A missing prerequisite throws an explicit PatchException instructing the user to select official Third-party lyrics. This is a checked cross-source prerequisite, not automatic dependency selection.
 
 ## Bytecode adapter
 
