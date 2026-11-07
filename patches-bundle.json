@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "created_at": "2026-11-07T11:13:21Z",
-  "description": "Community Flyme status bar lyrics, based on official Morphe 2.1.0. Requires third-party and lock-screen lyrics. Device validation pending.",
-  "download_url": "https://github.com/kljjh/flyme-lyrics-patches/releases/download/v1.0.0/flyme-lyrics-patches-1.0.0.mpp",
+  "version": "2.0.1",
+  "created_at": "2026-11-07T11:45:33Z",
+  "description": "Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official 2.1.0. Does not bundle official patches. Device validation pending.",
+  "download_url": "https://github.com/kljjh/flyme-lyrics-patches/releases/download/v2.0.1/flyme-lyrics-patches-2.0.1.mpp",
   "signature_download_url": ""
 }
