@@ -15,6 +15,8 @@ import java.util.Objects;
 
 /** Receives official media events and the already formatted mini-player text. */
 public final class FlymeLyrics {
+    private static final String SETTING_KEY = "morphe_music_lyrics_flyme_status_bar";
+    private static volatile Object flymeSetting;
     private static final String OWNER = "community.flymelyrics.owned";
     private static final String ADDED_NO_CLEAR = "community.flymelyrics.added_no_clear";
     private static final int SHOW = readFlag("FLAG_ALWAYS_SHOW_TICKER");
@@ -30,17 +32,21 @@ public final class FlymeLyrics {
 
     public static void ensureSettings() {
         try {
-            Class.forName("io.github.kljjh.flymelyrics.FlymeLyricsSettings");
+            if (flymeSetting == null) {
+                Class<?> settingType = Class.forName("app.morphe.extension.shared.settings.BooleanSetting");
+                flymeSetting = settingType.getConstructor(String.class, Boolean.class, boolean.class)
+                        .newInstance(SETTING_KEY, true, false);
+            }
         } catch (Exception | LinkageError ignored) {
-            // The setting class is optional to the notification bridge tests.
+            // The setting is optional to the notification bridge tests.
         }
     }
 
     private static boolean isEnabled() {
         try {
-            Class<?> settings = Class.forName("io.github.kljjh.flymelyrics.FlymeLyricsSettings");
-            Object setting = settings.getField("ENABLED").get(null);
-            return (Boolean) setting.getClass().getMethod("get").invoke(setting);
+            ensureSettings();
+            Object setting = flymeSetting;
+            return setting == null || (Boolean) setting.getClass().getMethod("get").invoke(setting);
         } catch (Exception | LinkageError ignored) {
             return true;
         }
