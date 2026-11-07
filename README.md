@@ -21,7 +21,9 @@
 https://raw.githubusercontent.com/kljjh/flyme-lyrics-patches/main/patches-bundle.json
 ```
 
-也可以从 [Releases](https://github.com/kljjh/flyme-lyrics-patches/releases/latest) 下载 `.mpp` 并在 Morphe App 中导入本地补丁文件。本项目不分发 YouTube Music APK。
+发布后也可以从 [Releases](https://github.com/kljjh/flyme-lyrics-patches/releases/latest) 下载 `.mpp` 并在 Morphe App 中导入本地补丁文件。每次发布附带完整的对应源码归档、许可和校验值。本项目不分发 YouTube Music APK。
+
+当前发布状态见 [STATUS.md](STATUS.md)；尚未发布成功时，上述导入入口还不能下载补丁包。
 
 ## 行为与限制
 

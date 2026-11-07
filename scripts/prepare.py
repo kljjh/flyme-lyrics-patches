@@ -25,6 +25,12 @@ def prepare(target):
 
     music = target / "extensions/music/src/main/java/app/morphe/extension/music"
     session = music / "patches/lyrics/session/LockScreenLyrics.java"
+    replace_once(session, "            if (session == null || original == null) {\n                return;", """            if (session == null || original == null) {
+                FlymeStatusBarLyrics.clear();
+                sessionRef = null;
+                originalMetadata = null;
+                ticker.stop();
+                return;""")
     replace_once(session, "            sessionRef = new WeakReference<>(session);", """            MediaSession previous = mediaSession();
             if (previous != null && !previous.getSessionToken().equals(session.getSessionToken())) {
                 FlymeStatusBarLyrics.clear();

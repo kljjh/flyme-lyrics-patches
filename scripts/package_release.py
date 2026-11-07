@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +44,15 @@ def package(upstream, repository):
     (dist / "patches-bundle.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     for name in ("LICENSE", "NOTICE", "UPSTREAM.md"):
         shutil.copy2(ROOT / name, dist / name)
+    # Distribute the exact prepared corresponding source alongside the binary.
+    paths = subprocess.check_output(
+        ["git", "-C", str(upstream), "ls-files", "--cached", "--others", "--exclude-standard", "-z"]
+    ).decode().split("\0")
+    with tarfile.open(dist / f"flyme-lyrics-patches-{version}-sources.tar.gz", "w:gz") as archive:
+        for name in sorted(set(filter(None, paths))):
+            path = upstream / name
+            if path.is_file():
+                archive.add(path, arcname=f"flyme-lyrics-patches-{version}/{name}")
     print(f"Validated {target.name}: {digest}")
 
 
