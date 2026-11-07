@@ -20,7 +20,6 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
 internal object OfficialHooks {
     const val LOCKSCREEN = "Lapp/morphe/extension/music/patches/lyrics/session/LockScreenLyrics;"
     const val MINIPLAYER = "Lapp/morphe/extension/music/patches/lyrics/session/MiniplayerLyrics;"
-    const val SETTINGS = "Lapp/morphe/extension/music/settings/Settings;"
     const val UTILS = "Lapp/morphe/extension/shared/Utils;"
     const val BRIDGE = "Lio/github/kljjh/flymelyrics/FlymeLyrics;"
     const val PANEL_INSTALLER = "Lapp/morphe/extension/music/patches/lyrics/ui/LyricsPanelInstaller;"
@@ -116,18 +115,6 @@ internal object OfficialHooks {
         val lineRegister = (next as OneRegisterInstruction).registerA
         update.addInstruction(lineIndex + 2, "invoke-static/range {v$lineRegister .. v$lineRegister}, $LOCKSCREEN->${PREFIX}Emit(Ljava/lang/String;)V")
         restore.addInstruction(0, "invoke-static {}, $LOCKSCREEN->${PREFIX}Clear()V")
-    }
-
-    fun instrumentSettings(cls: MutableClass) {
-        fun fail(detail: String): Nothing = throw PatchException("Unsupported official lyrics settings layout: $detail. Tested with official Morphe 2.1.0.")
-        val initializer = cls.methods.singleOrNull {
-            it.name == "<clinit>" && it.parameterTypes.isEmpty()
-                    && it.returnType == "V" && AccessFlags.STATIC.isSet(it.accessFlags) && it.implementation != null
-        } ?: fail("missing settings class initializer")
-        if (initializer.calls(BRIDGE, "ensureSettings", emptyList(), "V").isNotEmpty()) {
-            fail("add-on is already present; use an original APK")
-        }
-        initializer.addInstruction(0, "invoke-static {}, $BRIDGE->ensureSettings()V")
     }
 
 }
