@@ -81,11 +81,15 @@ class OfficialIntegrationTest {
         val cls = MutableClass(original)
         OfficialHooks.instrument(cls)
         assertFailsWith<PatchException> { OfficialHooks.instrument(cls) }
-        val changed = MutableClass(original)
-        changed.methods.removeAll { it.name == "getCurrentLine" }
-        val count = changed.methods.size
-        assertFailsWith<PatchException> { OfficialHooks.instrument(changed) }
-        assertEquals(count, changed.methods.size, "Validation must finish before adding helpers")
+        val originalMiniplayer = officialClasses().single { it.type == OfficialHooks.MINIPLAYER }
+        val miniplayer = MutableClass(originalMiniplayer)
+        OfficialHooks.instrumentMiniplayer(miniplayer)
+        assertFailsWith<PatchException> { OfficialHooks.instrumentMiniplayer(miniplayer) }
+        val changedMiniplayer = MutableClass(originalMiniplayer)
+        changedMiniplayer.methods.removeAll { it.name == "update" }
+        val count = changedMiniplayer.methods.size
+        assertFailsWith<PatchException> { OfficialHooks.instrumentMiniplayer(changedMiniplayer) }
+        assertEquals(count, changedMiniplayer.methods.size, "Validation must finish before adding helpers")
     }
 
     @Test fun requiresHostHooksRatherThanOnlyBundledUnusedClasses() {
