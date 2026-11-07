@@ -47,7 +47,7 @@ def package(repository):
     (dist / "SHA256SUMS.txt").write_text(f"{digest}  {target.name}\n", encoding="utf-8")
     manifest = {
         "version": version,
-        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
         "description": f"Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official {config['official_version']}. Does not bundle official patches. Device validation pending.",
         "download_url": f"https://github.com/{repository}/releases/download/v{version}/{target.name}",
         "signature_download_url": "",
