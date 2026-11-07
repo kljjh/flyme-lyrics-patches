@@ -1,0 +1,4 @@
+<resources>
+    <string name="morphe_music_lyrics_flyme_status_bar_title">Flyme status bar lyrics</string>
+    <string name="morphe_music_lyrics_flyme_status_bar_summary">Show the official mini-player lyric line in the Flyme status bar.</string>
+</resources>

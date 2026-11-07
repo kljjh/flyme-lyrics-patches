@@ -15,6 +15,8 @@ import java.util.Objects;
 
 /** Receives official media events and the already formatted mini-player text. */
 public final class FlymeLyrics {
+    private static final String SETTING_KEY = "morphe_music_lyrics_flyme_status_bar";
+    private static volatile Object flymeSetting;
     private static final String OWNER = "community.flymelyrics.owned";
     private static final String ADDED_NO_CLEAR = "community.flymelyrics.added_no_clear";
     private static final int SHOW = readFlag("FLAG_ALWAYS_SHOW_TICKER");
@@ -27,6 +29,28 @@ public final class FlymeLyrics {
     private static String lastArtist;
 
     private FlymeLyrics() { }
+
+    public static void ensureSettings() {
+        try {
+            if (flymeSetting == null) {
+                Class<?> settingType = Class.forName("app.morphe.extension.shared.settings.BooleanSetting");
+                flymeSetting = settingType.getConstructor(String.class, Boolean.class, boolean.class)
+                        .newInstance(SETTING_KEY, true, false);
+            }
+        } catch (Exception | LinkageError ignored) {
+            // The setting is optional to the notification bridge tests.
+        }
+    }
+
+    private static boolean isEnabled() {
+        try {
+            ensureSettings();
+            Object setting = flymeSetting;
+            return setting == null || (Boolean) setting.getClass().getMethod("get").invoke(setting);
+        } catch (Exception | LinkageError ignored) {
+            return true;
+        }
+    }
 
     private static int readFlag(String name) {
         try {
@@ -70,7 +94,7 @@ public final class FlymeLyrics {
 
     /** Runs after the official mini-player matching checks and receives its current line. */
     public static synchronized void onLine(Context context, MediaSession session, String text) {
-        if (!playing || !metadataValid
+        if (!isEnabled() || !playing || !metadataValid
             || session == null || !session.getSessionToken().equals(lastToken)
                 || text == null || text.trim().isEmpty()) {
             clear(context);

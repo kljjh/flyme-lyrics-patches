@@ -23,6 +23,8 @@ val flymeLyricsPatch = patch(
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
         val miniplayer = classDefByOrNull(OfficialHooks.MINIPLAYER)
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
+        val settings = classDefByOrNull(OfficialHooks.SETTINGS)
+            ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
         var selected = false
         classDefForEach { cls ->
             if (!cls.type.startsWith("Lapp/morphe/extension/") && !cls.type.startsWith("Lio/github/kljjh/flymelyrics/")) {
@@ -36,5 +38,6 @@ val flymeLyricsPatch = patch(
         // Validate the official API before editing. Unknown upstream layouts fail visibly.
         OfficialHooks.instrument(mutableClassDefBy(official))
         OfficialHooks.instrumentMiniplayer(mutableClassDefBy(miniplayer))
+        OfficialHooks.instrumentSettings(mutableClassDefBy(settings))
     }
 }

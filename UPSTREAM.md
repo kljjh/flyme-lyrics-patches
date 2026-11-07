@@ -23,7 +23,7 @@ The adapter checks exact method signatures and hook shapes before editing. It ad
 - Native metadata and playback events, for prompt track/session/pause/stop cleanup.
 - The mini-player restore path and the official settings initialization path.
 
-The bridge takes Android Context, MediaSession, MediaMetadata, PlaybackState and text as parameters. Its own runtime has no imports from the official lyrics code, no provider, no separate ticker and no network access. The official `morphe_music_lyrics_miniplayer` setting controls whether the text hook runs.
+The bridge takes Android Context, MediaSession, MediaMetadata, PlaybackState and text as parameters. Its own runtime has no imports from the official lyrics code, no provider, no separate ticker and no network access. The official `morphe_music_lyrics_miniplayer` setting gates the source text, while the independent `morphe_music_lyrics_flyme_status_bar` setting controls whether the status bar publishes it.
 
 Tested official fixture: Morphe Patches v2.1.0, source commit `8fa2c7a1a832498de8f179748998a3ca87e198eb`.
 Artifact SHA-256: `114eafa139ea3018f35af3498e8e67fe7850d4dd22a6065a02e891699dcc5e96`.
