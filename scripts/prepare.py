@@ -92,7 +92,8 @@ def prepare(target):
     replace_once(target / "gradle.properties", f"version = {config['version']}", f"version = {config['project_version']}")
     # Include license notices inside the distributed bundle as well as in its source.
     for name in ("LICENSE", "NOTICE", "UPSTREAM.md"):
-        dest = target / "patches/src/main/resources/META-INF" / name
+        # The upstream Gradle plugin excludes META-INF/LICENSE* and NOTICE*.
+        dest = target / "patches/src/main/resources/community" / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / name, dest)
     print(f"Prepared community bundle {config['project_version']} from {revision}")

@@ -6,7 +6,8 @@
 - 首次 CI 在 Android 工具安装步骤失败，原因是 `android-actions/setup-android@v3` 默认请求已下架的 `tools` 包，尚未开始完整 Android 编译。
 - 已改为使用运行器现有 `sdkmanager` 的完整路径安装 `platforms;android-36` 和 `build-tools;36.0.0`。
 - 自动审批服务的临时阻塞已通过授权恢复；修复已推送，继续进行完整构建。
-- **尚无已编译的 `.mpp`，尚无 Release，来源地址目前不可用。** 未进行 YT Music APK 修补安装或魅族真机验证。
+- 完整 Android 编译已通过；正在修复许可文件被上游打包规则排除的问题，并核对产物。
+- **尚无可下载 Release，来源地址目前不可用。** 未进行 YT Music APK 修补安装或魅族真机验证。
 
 首次构建记录：https://github.com/kljjh/flyme-lyrics-patches/actions/runs/42366086128
 

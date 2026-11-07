@@ -17,7 +17,7 @@ def package(upstream, repository):
     source = upstream / f"patches/build/libs/patches-{version}.mpp"
     with zipfile.ZipFile(source) as bundle:
         names = bundle.namelist()
-        required = ["classes.dex", "app/morphe/patches/music/layout/flymelyrics/FlymeLyricsPatchKt.class", "META-INF/LICENSE", "META-INF/NOTICE", "META-INF/UPSTREAM.md"]
+        required = ["classes.dex", "app/morphe/patches/music/layout/flymelyrics/FlymeLyricsPatchKt.class", "community/LICENSE", "community/NOTICE", "community/UPSTREAM.md"]
         for name in required:
             if name not in names:
                 raise RuntimeError(f"Invalid bundle: missing {name}")
