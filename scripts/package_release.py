@@ -11,23 +11,25 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def package(upstream, repository):
-    config = json.loads((ROOT / "upstream.json").read_text())
+def package(repository):
+    config = json.loads((ROOT / "compatibility.json").read_text())
     version = config["project_version"]
-    source = upstream / f"patches/build/libs/patches-{version}.mpp"
+    source = ROOT / f"patches/build/libs/patches-{version}.mpp"
     with zipfile.ZipFile(source) as bundle:
         names = bundle.namelist()
-        required = ["classes.dex", "app/morphe/patches/music/layout/flymelyrics/FlymeLyricsPatchKt.class", "community/LICENSE", "community/NOTICE", "community/UPSTREAM.md"]
+        required = ["classes.dex", "io/github/kljjh/flymelyrics/FlymeLyricsPatchKt.class", "community/LICENSE", "community/NOTICE", "community/UPSTREAM.md"]
         for name in required:
             if name not in names:
                 raise RuntimeError(f"Invalid bundle: missing {name}")
-        music = [n for n in names if n.endswith("music.rve") or n.endswith("music.mpe")]
-        if not music:
-            raise RuntimeError(f"Music extension not found: {[n for n in names if n.endswith(('.dex', '.rve', '.mpe'))]}")
-        if not any(b"FlymeStatusBarLyrics" in bundle.read(n) for n in music):
-            raise RuntimeError("Flyme runtime missing from the music extension")
-        if b"Flyme Lyrics Patches (community)" not in bundle.read("META-INF/MANIFEST.MF"):
-            raise RuntimeError("Bundle still has official branding")
+        extensions = [n for n in names if n.endswith(".mpe")]
+        if extensions != ["extensions/flyme.mpe"]:
+            raise RuntimeError(f"Expected ONLY the independent Flyme extension, got {extensions}")
+        if any(n.startswith("app/morphe/patches/") for n in names):
+            raise RuntimeError("Official patch classes must not be bundled")
+        if b"FlymeLyrics" not in bundle.read(extensions[0]):
+            raise RuntimeError("Flyme runtime missing")
+        if b"Flyme Lyrics Add-on" not in bundle.read("META-INF/MANIFEST.MF"):
+            raise RuntimeError("Unexpected bundle identity")
     dist = ROOT / "dist"
     dist.mkdir(exist_ok=True)
     target = dist / f"flyme-lyrics-patches-{version}.mpp"
@@ -37,20 +39,20 @@ def package(upstream, repository):
     manifest = {
         "version": version,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "description": f"Community Flyme status bar lyrics, based on official Morphe {config['version']}. Requires third-party and lock-screen lyrics. Device validation pending.",
+        "description": f"Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official {config['official_version']}. Does not bundle official patches. Device validation pending.",
         "download_url": f"https://github.com/{repository}/releases/download/v{version}/{target.name}",
         "signature_download_url": "",
     }
     (dist / "patches-bundle.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     for name in ("LICENSE", "NOTICE", "UPSTREAM.md"):
         shutil.copy2(ROOT / name, dist / name)
-    # Distribute the exact prepared corresponding source alongside the binary.
+    # Only this independent project's corresponding source; the official fixture is excluded.
     paths = subprocess.check_output(
-        ["git", "-C", str(upstream), "ls-files", "--cached", "--others", "--exclude-standard", "-z"]
+        ["git", "-C", str(ROOT), "ls-files", "--cached", "--others", "--exclude-standard", "-z"]
     ).decode().split("\0")
     with tarfile.open(dist / f"flyme-lyrics-patches-{version}-sources.tar.gz", "w:gz") as archive:
         for name in sorted(set(filter(None, paths))):
-            path = upstream / name
+            path = ROOT / name
             if path.is_file():
                 archive.add(path, arcname=f"flyme-lyrics-patches-{version}/{name}")
     print(f"Validated {target.name}: {digest}")
@@ -58,7 +60,6 @@ def package(upstream, repository):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("upstream", type=Path)
     parser.add_argument("--repository", default="kljjh/flyme-lyrics-patches")
     args = parser.parse_args()
-    package(args.upstream, args.repository)
+    package(args.repository)

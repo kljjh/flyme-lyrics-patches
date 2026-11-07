@@ -25,34 +25,28 @@ jobs:
           python-version: '3.12'
       - name: Test notification behavior
         run: python tests/run_tests.py
-      - name: Read upstream pin
+      - name: Read compatibility pin
         id: upstream
         run: |
           python - <<'PY'
           import json, os
-          c = json.load(open('upstream.json'))
+          c = json.load(open('compatibility.json'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write('commit=' + c['commit'] + '\n')
               f.write('version=' + c['project_version'] + '\n')
           PY
-      - uses: actions/checkout@v4
-        with:
-          repository: MorpheApp/morphe-patches
-          ref: ${{ steps.upstream.outputs.commit }}
-          path: work/upstream
-          persist-credentials: false
-      - name: Prepare pinned sources
-        run: python scripts/prepare.py work/upstream
+      - name: Download unmodified official integration fixture
+        run: python scripts/download_official.py
       - name: Ensure Android SDK 36
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"'
       - uses: gradle/actions/setup-gradle@v4
       - name: Compile Android patch bundle
-        working-directory: work/upstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x gradlew
-          ./gradlew :patches:buildAndroid --no-daemon --stacktrace
+          ./gradlew :patches:test :patches:buildAndroid --no-daemon --stacktrace
+      - name: Check instrumented official DEX with Android tools
+        run: '"$ANDROID_HOME/build-tools/36.0.0/dexdump" -f patches/build/test-results/official-lockscreen-patched.dex > /dev/null'
       - name: Verify and package bundle
         env:
           REPOSITORY: ${{ github.repository }}
@@ -60,9 +54,9 @@ jobs:
           VERSION: ${{ steps.upstream.outputs.version }}
         run: |
           if [[ "$REF" == refs/tags/* && "$REF" != "refs/tags/v$VERSION" ]]; then
-            echo 'Release tag differs from upstream.json project_version'; exit 1
+            echo 'Release tag differs from compatibility.json project_version'; exit 1
           fi
-          python scripts/package_release.py work/upstream --repository "$REPOSITORY"
+          python scripts/package_release.py --repository "$REPOSITORY"
       - uses: actions/upload-artifact@v4
         with:
           name: flyme-lyrics-patches
@@ -89,11 +83,11 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           cat > release-notes.md <<'EOF'
-          Independent community bundle based on Morphe v2.1.0, adding Flyme status bar lyrics.
+          Independent Flyme add-on: this source now contains only **Flyme status bar lyrics**.
 
-          Select **Flyme status bar lyrics** and its official **Third-party lyrics** dependency, then enable third-party, lock-screen and Flyme lyrics in YT Music.
+          In the same patching run, select **Third-party lyrics from the OFFICIAL Morphe source** and **Flyme status bar lyrics from this source**. Enable the official third-party and lock-screen lyric settings. No separate Flyme setting is needed. Missing official hooks produce an explicit patch error; Morphe cannot auto-select dependencies across sources.
 
-          Validation: notification behavior tests, full Android bundle compilation and bundle content checks. Real Flyme device and APK patch/install verification are still required. This release contains no YouTube Music APK.
+          Validation: notification behavior tests, integration against the unmodified official v2.1.0 extension DEX, DEX round-trip and dexdump, full Android compilation, and checks that no official patches or extensions are bundled. Real Flyme device and full YT Music APK patch/install verification are still required.
           EOF
           gh release create "$TAG" dist/* --title "Flyme Lyrics Patches $TAG" --notes-file release-notes.md --verify-tag
           cp dist/patches-bundle.json patches-bundle.json

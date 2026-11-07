@@ -1,64 +1,53 @@
-# Flyme Lyrics Patches
+# Flyme Lyrics Add-on
 
-为 YouTube Music 增加**魅族状态栏歌词**的独立社区补丁源。基于固定版本的 Morphe 官方补丁构建，不是 Morphe 或魅族官方项目。
+为 YouTube Music 增加魅族状态栏歌词的**独立附加补丁**。本来源只包含一个 `Flyme status bar lyrics`，配合 **Morphe 官方来源的 `Third-party lyrics`** 使用。
 
-歌词完全由官方 **Third-party lyrics** 提供。状态栏使用“在锁屏上显示媒体通知卡片歌词”已经生成的相同文本，包括该功能的格式化结果、翻译和间奏文本。
+2.0 起不再重新打包整套官方补丁。歌词获取、翻译、时间同步和锁屏文本全部继续由官方实现提供。本项目是社区项目，不是 Morphe 或魅族官方发布。
 
-## 导入与修补
+## 使用
 
-1. 安装兼容当前 `.mpp` 格式的最新版 Morphe App。
-2. [点此添加补丁源](https://morphe.software/add-source?github=kljjh/flyme-lyrics-patches)，或在补丁来源中添加 GitHub 仓库 `kljjh/flyme-lyrics-patches`。
-3. 选择本来源和**原版、未修补的 YouTube Music APK**。建议先使用 `9.30.53`。
-4. 勾选 **Flyme status bar lyrics**，它会依赖同包内的 **Third-party lyrics**。按需要选择同一来源中的 GmsCore support、后台播放等官方补丁。
-5. 修补并安装。在 YT Music 的 Morphe → 歌词设置中打开：第三方歌词、在锁屏上显示媒体通知卡片歌词、魅族状态栏歌词。
-6. 在 Flyme 系统设置中允许该应用的通知、媒体通知和状态栏歌词（具体名称依系统版本）。
+1. 在 Morphe App 中保留或添加[官方补丁来源](https://morphe.software/add-source?github=MorpheApp/morphe-patches)。
+2. [添加本项目来源](https://morphe.software/add-source?github=kljjh/flyme-lyrics-patches)，仓库为 `kljjh/flyme-lyrics-patches`。
+3. 选择原版 YouTube Music APK，建议 `9.30.53`。在**同一次修补**中勾选官方来源的 **Third-party lyrics** 和本来源的 **Flyme status bar lyrics**。GmsCore、后台播放等其他补丁仍从官方来源选择。
+4. 安装后，在官方 Morphe 歌词设置中启用**第三方歌词**及**在锁屏上显示媒体通知卡片歌词**。没有额外的魅族歌词开关；本补丁随官方锁屏歌词开关启停。
+5. 在 Flyme 中允许应用媒体通知和状态栏歌词，名称依系统版本而异。
 
-**不要同时勾选本来源和官方来源中的同名补丁。** 本来源包含官方补丁及本项目新增补丁，直接一次修补原版 APK；不要求先用官方来源修补一次。
+Morphe 目前不会跨来源自动勾选依赖，两个补丁需要手动选中。漏选官方歌词补丁会报出明确的提示，不会生成一个声称成功但没有歌词接入的版本。
 
-手动来源地址：
+来源地址：
 
 ```text
 https://raw.githubusercontent.com/kljjh/flyme-lyrics-patches/main/patches-bundle.json
 ```
 
-发布后也可以从 [Releases](https://github.com/kljjh/flyme-lyrics-patches/releases/latest) 下载 `.mpp` 并在 Morphe App 中导入本地补丁文件。每次发布附带完整的对应源码归档、许可和校验值。本项目不分发 YouTube Music APK。
+[下载 `.mpp`](https://github.com/kljjh/flyme-lyrics-patches/releases/latest) · [当前验证状态](STATUS.md) · [真机验收](docs/DEVICE_TEST.md)
 
-当前发布状态见 [STATUS.md](STATUS.md)；尚未发布成功时，上述导入入口还不能下载补丁包。
+从 1.0 升级：刷新本来源至 2.0，恢复官方来源，并按上面的方法从原版 APK 重新修补。1.0 是包含官方补丁的旧整合包；2.0 是与官方来源搭配的独立附加包。
 
-## 行为与限制
+## 行为与兼容性
 
-- 默认关闭，需手动开启。关闭锁屏歌词也会停止状态栏歌词。
-- 复用已有媒体通知，不创建额外通知或后台服务，不需要悬浮窗或通知读取权限。
-- 暂停、停止、切歌、歌词尚未匹配、关闭相关设置时清除；恢复播放后继续更新。
-- Flyme 的两个专用通知标志都存在且允许反射访问时才启用。不根据品牌名称判断，也不猜测数字常量。
-- 没有同步歌词时不自行搜索或伪造歌词；间奏和歌词回退文本以官方锁屏模块为准。
-- 上游支持的稳定 APK：`9.30.53`、`9.20.53`、`9.15.51`；实验版本：`9.44.52`、`9.43.51`、`9.42.52`。版本列表来自固定的官方 v2.1.0，不代表本项目已逐版本真机测试。
-- 构建和模拟通知测试不能替代魅族真机验证。发布说明会列明实际验证范围。
+- 使用官方锁屏模块已经生成的相同文本，保留翻译、换行和间奏格式，不增加歌词服务或网络请求。
+- 在原媒体通知上添加魅族 ticker 标志，保留封面、按钮、通知 ID 和渠道；无需额外通知、悬浮窗或通知读取服务。
+- 暂停、停止、切歌、播放会话改变、无同步歌词、关闭官方歌词功能时清除状态栏歌词。
+- 不支持魅族两个专用标志的系统会跳过。反射或通知更新被系统限制时不会阻止官方歌词播放。
+- 已针对官方补丁 **2.1.0** 的真实扩展 DEX 验证接入。上游接口变动会明确报错，不能保证所有未来版本都兼容。
+- 稳定 YT Music 版本：`9.30.53`、`9.20.53`、`9.15.51`；实验版本：`9.44.52`、`9.43.51`、`9.42.52`，来自所验证官方版本的兼容范围。
 
-## 构建
+## 构建与测试
 
-需要 Python 3.11+、Git、JDK 21（Gradle 会按上游配置获取 JDK 17）、Android SDK 36，以及有权读取公开 Morphe GitHub Packages 的凭据。
+需要 Git、Python 3.11+、JDK 21（Gradle 配置使用 JDK 17 工具链）、Android SDK 36，以及可读取 Morphe 公共 GitHub Packages 的构建凭据。使用环境变量 `GITHUB_ACTOR`、`GITHUB_TOKEN` 提供凭据，不要提交令牌。
 
 ```sh
-git clone https://github.com/kljjh/flyme-lyrics-patches.git
-cd flyme-lyrics-patches
-git clone https://github.com/MorpheApp/morphe-patches.git work/upstream
-git -C work/upstream checkout 8fa2c7a1a832498de8f179748998a3ca87e198eb
 python tests/run_tests.py
-python scripts/prepare.py work/upstream
-# 通过环境变量提供 GITHUB_ACTOR 和 GITHUB_TOKEN，不要提交凭据。
-cd work/upstream
-./gradlew :patches:buildAndroid --no-daemon
+python scripts/download_official.py
+./gradlew :patches:test :patches:buildAndroid --no-daemon
+python scripts/package_release.py
 ```
 
-Windows 使用 `gradlew.bat`。`prepare.py` 只接受干净、版本精确匹配的上游检出；遇到接口变动立即报错，不做模糊替换。
+Windows 使用 `gradlew.bat`。官方 `.mpp` 只作为带 SHA-256 校验的测试夹具下载到 `work/`，不会进入本项目发布包。构建不克隆、不修改官方源码，也不编译官方补丁。
 
-GitHub Actions 在提交和 PR 上运行测试、编译并检查 `.mpp` 内部的补丁类、Android DEX、音乐扩展和许可文件。推送 `v*` 标签时创建 Release 和来源描述文件。首次发布前，来源描述文件不会指向不存在的构建。
+测试覆盖通知状态、真实官方歌词 DEX 的注入及往返读写、缺少依赖和接口变化时的拒绝行为。GitHub Actions 另用 Android `dexdump` 检查修改后的 DEX，并检查包内只有本项目扩展。自动测试不能替代真实 YT Music APK 和魅族设备验收。
 
-## 真机验收
+## 许可与实现记录
 
-参见 [测试清单](docs/DEVICE_TEST.md)。反馈请提供机型、Flyme 版本、YT Music 版本、补丁版本，以及锁屏歌词能否正常显示；不要提供账号或令牌。
-
-## 来源与许可
-
-[改动与上游记录](UPSTREAM.md) · [GPLv3](LICENSE) · [附加 NOTICE](NOTICE) · [魅族接口文档](https://open.flyme.cn/docs?id=239)
+[GPLv3](LICENSE) · [NOTICE](NOTICE) · [依赖机制与上游记录](UPSTREAM.md) · [魅族接口文档](https://open.flyme.cn/docs?id=239)
