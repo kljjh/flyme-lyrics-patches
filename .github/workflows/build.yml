@@ -43,7 +43,8 @@ jobs:
           persist-credentials: false
       - name: Prepare pinned sources
         run: python scripts/prepare.py work/upstream
-      - uses: android-actions/setup-android@v3
+      - name: Ensure Android SDK 36
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
       - name: Compile Android patch bundle
         working-directory: work/upstream
