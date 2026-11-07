@@ -50,12 +50,10 @@ class OfficialIntegrationTest {
         })
         val cls = MutableClass(all.single { it.type == OfficialHooks.LOCKSCREEN })
         val miniplayer = MutableClass(all.single { it.type == OfficialHooks.MINIPLAYER })
-        val settings = MutableClass(all.single { it.type == OfficialHooks.SETTINGS })
         val originalCount = cls.methods.size
         val originalMiniplayerCount = miniplayer.methods.size
         OfficialHooks.instrument(cls)
         OfficialHooks.instrumentMiniplayer(miniplayer)
-        OfficialHooks.instrumentSettings(settings)
         assertEquals(originalCount + 4, cls.methods.size)
         assertEquals(originalMiniplayerCount, miniplayer.methods.size)
         val calls = cls.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
@@ -64,8 +62,6 @@ class OfficialIntegrationTest {
         val miniplayerCalls = miniplayer.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
         assertTrue(miniplayerCalls.any { it.definingClass == OfficialHooks.LOCKSCREEN && it.name == "flymeLyricsAddonEmit" })
         assertTrue(miniplayerCalls.any { it.definingClass == OfficialHooks.LOCKSCREEN && it.name == "flymeLyricsAddonClear" })
-        val settingsCalls = settings.methods.flatMap { m -> m.implementation?.instructions?.mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }.orEmpty() }
-        assertTrue(settingsCalls.any { it.definingClass == OfficialHooks.BRIDGE && it.name == "ensureSettings" })
         val store = MemoryDataStore()
         DexPool.writeTo(store, ImmutableDexFile(Opcodes.getDefault(), listOf(cls)))
         val rewritten = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(store.data)).classes.single()

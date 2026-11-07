@@ -9,4 +9,4 @@
 - 已通过完整 Android 编译及包内容校验；[构建记录](https://github.com/kljjh/flyme-lyrics-patches/actions/runs/42369119482)。
 - 使用官方 Morphe Desktop 2.1.1 验证 `.mpp` 可独立加载，只有一个 `Flyme status bar lyrics`；与官方 `.mpp` 一起加载时，两种歌词补丁各出现一次。
 - 两个补丁需要在同一次修补中手动勾选；Morphe 尚不支持按远程来源自动选择依赖。
-- 2.0.2 将状态栏文本读取切换为官方迷你播放器歌词文本，并增加独立的 Flyme 开关；尚未验证真实 YT Music APK 的修补安装或魅族真机表现。
+- 2.0.2 将状态栏文本读取切换为官方迷你播放器歌词文本，要求启用官方迷你播放器歌词开关；尚未验证真实 YT Music APK 的修补安装或魅族真机表现。
