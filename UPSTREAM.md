@@ -19,7 +19,7 @@ The add-on instead loads independently, then in **finalize**, after every select
 
 The adapter checks exact method signatures and hook shapes before editing. It adds four helpers inside the injected official LockScreenLyrics class and hooks:
 
-- The actual `MiniplayerLyrics.update()` `getCurrentLineText()` result, so it uses exactly the official mini-player text without depending on the official mini-player switch.
+- The actual `MiniplayerLyrics.update()` `getCurrentLineText()` result, so it uses exactly the official mini-player text. The official mini-player switch is the required source gate.
 - Native metadata and playback events, for prompt track/session/pause/stop cleanup.
 - The mini-player restore path and the official settings initialization path.
 

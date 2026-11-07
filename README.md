@@ -9,7 +9,7 @@
 1. 在 Morphe App 中保留或添加[官方补丁来源](https://morphe.software/add-source?github=MorpheApp/morphe-patches)。
 2. [添加本项目来源](https://morphe.software/add-source?github=kljjh/flyme-lyrics-patches)，仓库为 `kljjh/flyme-lyrics-patches`。
 3. 选择原版 YouTube Music APK，建议 `9.30.53`。在**同一次修补**中勾选官方来源的 **Third-party lyrics** 和本来源的 **Flyme status bar lyrics**。GmsCore、后台播放等其他补丁仍从官方来源选择。
-4. 安装后，在官方 Morphe 歌词设置中启用**第三方歌词**和**显示迷你播放器歌词**。本补丁读取迷你播放器生成的文本，因此必须开启官方迷你播放器歌词功能。
+4. 安装后，在官方 Morphe 歌词设置中启用**第三方歌词**和**显示迷你播放器歌词**。开启官方迷你播放器歌词后，Flyme 状态栏歌词功能会自动启用；关闭它时状态栏歌词也会清除。
 5. 在 Flyme 中允许应用媒体通知和状态栏歌词，名称依系统版本而异。
 
 Morphe 目前不会跨来源自动勾选依赖，两个补丁需要手动选中。漏选官方歌词补丁会报出明确的提示，不会生成一个声称成功但没有歌词接入的版本。
