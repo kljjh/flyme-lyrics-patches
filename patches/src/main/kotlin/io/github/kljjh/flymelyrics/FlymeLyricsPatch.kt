@@ -12,8 +12,7 @@ val flymeLyricsPatch = patch(
         name = "YouTube Music",
         packageName = "com.google.android.apps.youtube.music",
         apkFileType = ApkFileType.APK_REQUIRED,
-        targets = listOf("9.30.53", "9.20.53", "9.15.51").map { AppTarget(version = it, minSdk = 26) }
-                + listOf("9.44.52", "9.43.51", "9.42.52").map { AppTarget(version = it, minSdk = 26, isExperimental = true) }
+        targets = listOf(AppTarget(version = null, minSdk = 26))
     ))
     extendWith("extensions/flyme.mpe")
 
@@ -24,7 +23,7 @@ val flymeLyricsPatch = patch(
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
         val miniplayer = classDefByOrNull(OfficialHooks.MINIPLAYER)
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
-        val panelInstaller = classDefByOrNull(OfficialHooks.PANEL_INSTALLER)
+        val settings = classDefByOrNull(OfficialHooks.SETTINGS)
             ?: throw PatchException(OfficialHooks.MISSING_OFFICIAL)
         var selected = false
         classDefForEach { cls ->
@@ -39,6 +38,6 @@ val flymeLyricsPatch = patch(
         // Validate the official API before editing. Unknown upstream layouts fail visibly.
         OfficialHooks.instrument(mutableClassDefBy(official))
         OfficialHooks.instrumentMiniplayer(mutableClassDefBy(miniplayer))
-        OfficialHooks.instrumentSettings(mutableClassDefBy(panelInstaller))
+        OfficialHooks.instrumentSettings(mutableClassDefBy(settings))
     }
 }
