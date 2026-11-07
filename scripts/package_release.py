@@ -16,11 +16,16 @@ def package(repository):
     version = config["project_version"]
     source = ROOT / f"patches/build/libs/patches-{version}.mpp"
     with zipfile.ZipFile(source) as bundle:
+        if bundle.testzip() is not None:
+            raise RuntimeError("Invalid bundle: corrupt ZIP entry")
         names = bundle.namelist()
         required = ["classes.dex", "io/github/kljjh/flymelyrics/FlymeLyricsPatchKt.class", "community/LICENSE", "community/NOTICE", "community/UPSTREAM.md"]
         for name in required:
             if name not in names:
                 raise RuntimeError(f"Invalid bundle: missing {name}")
+        dex_entries = [name for name in names if name.lower().endswith(".dex")]
+        if dex_entries != ["classes.dex"] or not bundle.read("classes.dex").startswith(b"dex\n"):
+            raise RuntimeError(f"Invalid bundle: expected one valid top-level DEX, got {dex_entries}")
         extensions = [n for n in names if n.endswith(".mpe")]
         if extensions != ["extensions/flyme.mpe"]:
             raise RuntimeError(f"Expected ONLY the independent Flyme extension, got {extensions}")
@@ -28,7 +33,11 @@ def package(repository):
             raise RuntimeError("Official patch classes must not be bundled")
         if b"FlymeLyrics" not in bundle.read(extensions[0]):
             raise RuntimeError("Flyme runtime missing")
-        if b"Flyme Lyrics Add-on" not in bundle.read("META-INF/MANIFEST.MF"):
+        manifest = bundle.read("META-INF/MANIFEST.MF").decode("utf-8", "replace")
+        for attribute in ("Name:", "Version:", "Patcher-Version:"):
+            if not any(line.startswith(attribute) for line in manifest.splitlines()):
+                raise RuntimeError(f"Invalid bundle: manifest missing {attribute}")
+        if "Name: Flyme Lyrics Add-on" not in manifest:
             raise RuntimeError("Unexpected bundle identity")
     dist = ROOT / "dist"
     dist.mkdir(exist_ok=True)
@@ -42,6 +51,7 @@ def package(repository):
         "description": f"Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official {config['official_version']}. Does not bundle official patches. Device validation pending.",
         "download_url": f"https://github.com/{repository}/releases/download/v{version}/{target.name}",
         "signature_download_url": "",
+        "public_key": None,
     }
     (dist / "patches-bundle.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     for name in ("LICENSE", "NOTICE", "UPSTREAM.md"):
