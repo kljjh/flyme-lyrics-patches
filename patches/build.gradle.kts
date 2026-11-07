@@ -28,6 +28,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 tasks.test {
+    // Preserve the rewritten DEX when Gradle restores successful tests from cache.
+    outputs.file(layout.buildDirectory.file("test-results/official-lockscreen-patched.dex"))
     testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
     systemProperty("officialBundle", rootProject.file("work/official/patches-2.1.0.mpp").absolutePath)
 }
