@@ -23,13 +23,9 @@ public final class FlymeTiming {
         int value = prefs(c).getInt(KEY, DEFAULT);
         return value == FOLLOW ? DEFAULT : value;
     }
-    static void setFollow(Context c, boolean follow) {
-        prefs(c).edit().putBoolean(FOLLOW_KEY, follow).apply();
-        FlymeController.refresh();
-    }
-    static void save(Context c, int value) {
+    static void configure(Context c, boolean follow, int value) {
         if (Math.abs((long)value) > LIMIT || value % STEP != 0) throw new IllegalArgumentException("Invalid lyric offset");
-        prefs(c).edit().putInt(KEY, value).apply();
+        prefs(c).edit().putBoolean(FOLLOW_KEY, follow).putInt(KEY, value).apply();
         FlymeController.refresh();
     }
     static String line(Context c, String[] track, String title) {

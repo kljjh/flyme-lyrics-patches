@@ -13,7 +13,8 @@ import android.preference.SwitchPreference;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.preference.CheckBoxPreference;
+import android.widget.CheckBox;
+import app.morphe.extension.shared.theme.ThemeUtils;
 import java.util.ArrayList;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -49,29 +50,12 @@ public final class FlymePreference {
         offset.setKey(FlymeTiming.KEY);
         offset.setPersistent(false);
         offset.setTitle(zh ? "状态栏歌词时间偏移" : "Status bar lyric timing");
-        offset.setSummary(timingLabel(FlymeTiming.manual(c), zh));
+        offset.setSummary(summary(c, zh));
         offset.setOnPreferenceClickListener(pref -> {
             showTimingDialog(offset, zh);
             return true;
         });
-        CheckBoxPreference follow = new CheckBoxPreference(c);
-        // Keep the checkbox widget from CheckBoxPreference; copy only the row layout and icon.
-        int checkboxWidget = follow.getWidgetLayoutResource();
-        matchRow(follow, mini);
-        follow.setWidgetLayoutResource(checkboxWidget);
-        follow.setKey(FlymeTiming.FOLLOW_KEY);
-        follow.setPersistent(false);
-        follow.setTitle(zh ? "状态栏歌词跟随 MediaSession 偏移" : "Use MediaSession timing for status bar lyrics");
-        follow.setSummary(zh ? "使用上方迷你播放器和媒体会话的偏移值。" : "Use the mini-player and media session offset above.");
-        follow.setChecked(FlymeTiming.follows(c));
-        offset.setEnabled(!follow.isChecked());
-        follow.setOnPreferenceChangeListener((pref, value) -> {
-            boolean checked = Boolean.TRUE.equals(value);
-            FlymeTiming.setFollow(c, checked);
-            offset.setEnabled(!checked);
-            return true;
-        });
-        insertAfter(timingParent, miniTiming, follow, offset);
+        insertAfter(timingParent, miniTiming, offset);
     }
     // PreferenceGroup breaks order ties by title, which varies with the UI language.
     // Reserve actual positions within this category while preserving sibling order.
@@ -139,10 +123,34 @@ public final class FlymePreference {
         LinearLayout content = new LinearLayout(c);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(0, gap, 0, gap);
+        final int foreground = ThemeUtils.getAppForegroundColor();
+        CheckBox follow = new CheckBox(c);
+        follow.setText(zh ? "跟随 MediaSession 时间偏移" : "Follow MediaSession timing");
+        follow.setTextColor(foreground);
+        follow.setButtonTintList(ColorStateList.valueOf(foreground));
+        follow.setChecked(FlymeTiming.follows(c));
+        TextView hint = new TextView(c);
+        hint.setText(zh ? "勾选：使用迷你播放器和媒体会话的偏移值。取消勾选：用下方滑块单独调整状态栏歌词。"
+                : "Checked: use the mini-player and media session offset. Unchecked: adjust status bar lyrics with the slider below.");
+        hint.setTextColor(foreground);
+        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        hint.setPadding(0, 0, 0, gap);
+        slider.setEnabled(!follow.isChecked());
+        row.setAlpha(follow.isChecked() ? 0.5f : 1f);
+        follow.setOnCheckedChangeListener((button, checked) -> {
+            slider.setEnabled(!checked);
+            row.setAlpha(checked ? 0.5f : 1f);
+        });
+        content.addView(follow, MATCH_PARENT, WRAP_CONTENT);
+        content.addView(hint, MATCH_PARENT, WRAP_CONTENT);
         content.addView(row, MATCH_PARENT, WRAP_CONTENT);
         Pair<Dialog, LinearLayout> dialog = CustomDialog.create(c, pref.getTitle(), null, null, null,
-                () -> saveTiming(pref, sliderValue(slider), zh),
+                () -> {
+                    FlymeTiming.configure(c, follow.isChecked(), sliderValue(slider));
+                    pref.setSummary(summary(c, zh));
+                },
                 () -> {}, zh ? "重置" : "Reset", () -> {
+                    follow.setChecked(true);
                     slider.setProgress(progress(FlymeTiming.DEFAULT));
                 }, false);
         dialog.second.addView(content, 1);
@@ -153,12 +161,13 @@ public final class FlymePreference {
     private static TextView endpoint(Context c, int ms) {
         TextView label = new TextView(c);
         label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        label.setTextColor(ThemeUtils.getAppForegroundColor());
         label.setText(ms + "ms");
         return label;
     }
-    private static void saveTiming(Preference pref,int ms,boolean zh) {
-        FlymeTiming.save(pref.getContext(), ms);
-        pref.setSummary(timingLabel(ms, zh));
+    private static String summary(Context c, boolean zh) {
+        return FlymeTiming.follows(c) ? (zh ? "跟随 MediaSession 时间偏移" : "Following MediaSession timing")
+                : timingLabel(FlymeTiming.manual(c), zh);
     }
     private static String timingLabel(int ms, boolean zh) {
         if (ms == 0) return zh ? "0 ms（无偏移）" : "0 ms (no offset)";

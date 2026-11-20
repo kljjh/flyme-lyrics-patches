@@ -18,15 +18,15 @@ public class ControllerTest {
     LyricsManager m=LyricsManager.getInstance(); m.timeline=true;
     assert FlymeTiming.follows(c); Handler.tick(); assert "previous".equals(e.n.tickerText); // follows official +400, not a hardcoded -800
     m.official=-800; Handler.tick(); assert "next".equals(e.n.tickerText);
-    m.official=400; FlymeTiming.setFollow(c,false); Handler.tick(); assert "next".equals(e.n.tickerText); // independent default -800
+    m.official=400; FlymeTiming.configure(c,false,FlymeTiming.manual(c)); Handler.tick(); assert "next".equals(e.n.tickerText); // independent default -800
     assert "previous".equals(m.getCurrentLineText()); // official remains +400
-    FlymeTiming.save(c, 0); Handler.tick(); assert "previous".equals(e.n.tickerText);
+    FlymeTiming.configure(c,false, 0); Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.playback=1800; Handler.tick(); assert "next".equals(e.n.tickerText);
-    FlymeTiming.save(c, 500); Handler.tick(); assert "previous".equals(e.n.tickerText);
+    FlymeTiming.configure(c,false, 500); Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.playback=2000; Handler.tick(); assert "next".equals(e.n.tickerText);
-    FlymeTiming.setFollow(c,true); m.official=600; Handler.tick(); assert "previous".equals(e.n.tickerText);
+    FlymeTiming.configure(c,true,FlymeTiming.manual(c)); m.official=600; Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.official=-800; Handler.tick(); assert "next".equals(e.n.tickerText);
-    FlymeTiming.setFollow(c,false); assert FlymeTiming.manual(c)==500;
+    FlymeTiming.configure(c,false,FlymeTiming.manual(c)); assert FlymeTiming.manual(c)==500;
     Context legacy=new Context(); legacy.getSharedPreferences(FlymeController.FILE,0).edit().putInt(FlymeTiming.KEY,0).apply();
     assert !FlymeTiming.follows(legacy) && FlymeTiming.manual(legacy)==0;
     legacy.getSharedPreferences(FlymeController.FILE,0).edit().putInt(FlymeTiming.KEY,FlymeTiming.FOLLOW).apply();

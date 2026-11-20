@@ -96,6 +96,7 @@ internal object OfficialHooks {
                         it.returnType == result && AccessFlags.STATIC.isSet(it.accessFlags) == static && AccessFlags.PUBLIC.isSet(it.accessFlags) } != false)
                 throw PatchException("Unsupported official lyrics API: $owner->$name")
         }
+        requireApi("Lapp/morphe/extension/shared/theme/ThemeUtils;", "getAppForegroundColor", emptyList(), "I", true)
         val chars = "Ljava/lang/CharSequence;"
         val action = "Ljava/lang/Runnable;"
         requireApi("Lapp/morphe/extension/shared/ui/CustomDialog;", "create", listOf("Landroid/content/Context;", chars, chars,
