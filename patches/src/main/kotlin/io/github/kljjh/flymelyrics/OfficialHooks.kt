@@ -96,6 +96,10 @@ internal object OfficialHooks {
                         it.returnType == result && AccessFlags.STATIC.isSet(it.accessFlags) == static && AccessFlags.PUBLIC.isSet(it.accessFlags) } != false)
                 throw PatchException("Unsupported official lyrics API: $owner->$name")
         }
+        val chars = "Ljava/lang/CharSequence;"
+        val action = "Ljava/lang/Runnable;"
+        requireApi("Lapp/morphe/extension/shared/ui/CustomDialog;", "create", listOf("Landroid/content/Context;", chars, chars,
+                "Landroid/widget/EditText;", chars, action, action, chars, action, "Z"), "Landroid/util/Pair;", true)
         requireApi(bool, "get", emptyList(), "Ljava/lang/Boolean;", false)
         requireApi("${base}model/MetadataCleaner;", "parseCleanTitleAndArtist", listOf(string, string), "[$string", true)
         requireApi(mgr, "getInstance", emptyList(), mgr, true)
