@@ -19,6 +19,7 @@ https://raw.githubusercontent.com/kljjh/flyme-lyrics-patches/main/patches-bundle
 ## 歌词设置
 
 - **魅族状态栏歌词**：默认开启。暂停播放或没有匹配的同步歌词时，状态栏歌词会清除。
-- **状态栏歌词时间偏移**：默认 **−800 ms**，即提前 0.8 秒。可在 −2000 至 +2000 ms 之间按 100 ms 调节；负值提前，正值延后，0 表示不额外偏移。勾选「跟随官方」可使用迷你播放器和媒体会话的偏移值。
+- **状态栏歌词跟随 MediaSession 偏移**：默认勾选，位于官方「迷你播放器和媒体会话时间偏移」下方。状态栏直接使用该项的当前值（官方默认 −800 ms），全局歌词校时仍独立生效。
+- **状态栏歌词时间偏移**：取消跟随后可单独调节，初始值为 −800 ms（提前 0.8 秒），范围 −2000 至 +2000 ms，每档 100 ms。正值延后，0 表示不额外偏移。恢复跟随会保留手动值。
 
 本项目为独立社区补丁。歌词由 [Morphe](https://github.com/MorpheApp/morphe-patches) 提供，状态栏显示使用[魅族公开接口](https://open.flyme.cn/docs?id=239)。许可见 [GPLv3](LICENSE) 和 [NOTICE](NOTICE)。

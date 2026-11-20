@@ -16,14 +16,21 @@ public class ControllerTest {
     Settings.LYRICS_ENABLED.value=false; FlymeController.refresh(); assert Handler.pending==null && e.n.tickerText==null;
     Settings.LYRICS_ENABLED.value=true; FlymeController.refresh(); Handler.tick();assert "Song".equals(e.n.tickerText);
     LyricsManager m=LyricsManager.getInstance(); m.timeline=true;
-    Handler.tick(); assert "next".equals(e.n.tickerText); // default -800: 1000ms reads 1800ms
+    assert FlymeTiming.follows(c); Handler.tick(); assert "previous".equals(e.n.tickerText); // follows official +400, not a hardcoded -800
+    m.official=-800; Handler.tick(); assert "next".equals(e.n.tickerText);
+    m.official=400; FlymeTiming.setFollow(c,false); Handler.tick(); assert "next".equals(e.n.tickerText); // independent default -800
     assert "previous".equals(m.getCurrentLineText()); // official remains +400
     FlymeTiming.save(c, 0); Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.playback=1800; Handler.tick(); assert "next".equals(e.n.tickerText);
     FlymeTiming.save(c, 500); Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.playback=2000; Handler.tick(); assert "next".equals(e.n.tickerText);
-    FlymeTiming.save(c, FlymeTiming.FOLLOW); m.official=600; Handler.tick(); assert "previous".equals(e.n.tickerText);
+    FlymeTiming.setFollow(c,true); m.official=600; Handler.tick(); assert "previous".equals(e.n.tickerText);
     m.official=-800; Handler.tick(); assert "next".equals(e.n.tickerText);
+    FlymeTiming.setFollow(c,false); assert FlymeTiming.manual(c)==500;
+    Context legacy=new Context(); legacy.getSharedPreferences(FlymeController.FILE,0).edit().putInt(FlymeTiming.KEY,0).apply();
+    assert !FlymeTiming.follows(legacy) && FlymeTiming.manual(legacy)==0;
+    legacy.getSharedPreferences(FlymeController.FILE,0).edit().putInt(FlymeTiming.KEY,FlymeTiming.FOLLOW).apply();
+    assert FlymeTiming.follows(legacy) && FlymeTiming.manual(legacy)==-800;
     m.fail=true; Handler.tick(); assert !FlymeTiming.isStatusRead() && FlymeTiming.offset(123)==123; m.fail=false;
     FlymeController.onPlaybackState(c,new PlaybackState(2)); assert Handler.pending==null && e.n.tickerText==null;
     System.out.println("PASS: independent default, persisted off, immediate clearing, matching, title fallback and master switch");

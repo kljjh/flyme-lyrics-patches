@@ -13,7 +13,8 @@ import android.preference.SwitchPreference;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.widget.CheckBox;
+import android.preference.CheckBoxPreference;
+import java.util.ArrayList;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -30,7 +31,8 @@ public final class FlymePreference {
         Preference mini = root.findPreference("morphe_music_lyrics_miniplayer");
         Preference miniTiming = root.findPreference("morphe_music_lyrics_mini_next_offset_ms");
         PreferenceGroup parent = parentOf(root, mini);
-        if (parent == null) return;
+        PreferenceGroup timingParent = parentOf(root, miniTiming);
+        if (parent == null || timingParent == null) return;
         Context c = parent.getContext();
         SwitchPreference toggle = new SwitchPreference(c);
         boolean zh = "zh".equals(c.getResources().getConfiguration().getLocales().get(0).getLanguage());
@@ -41,18 +43,47 @@ public final class FlymePreference {
         toggle.setSummary(zh ? "在状态栏显示当前歌词。" : "Show the current lyric in the status bar.");
         toggle.setChecked(FlymeController.enabled(c));
         toggle.setOnPreferenceChangeListener((pref, value) -> { FlymeController.setEnabled(c, Boolean.TRUE.equals(value)); return true; });
-        parent.addPreference(toggle);
+        insertAfter(parent, mini, toggle);
         Preference offset = new Preference(c);
         matchRow(offset, miniTiming);
         offset.setKey(FlymeTiming.KEY);
         offset.setPersistent(false);
         offset.setTitle(zh ? "状态栏歌词时间偏移" : "Status bar lyric timing");
-        offset.setSummary(timingLabel(FlymeTiming.setting(c), zh));
+        offset.setSummary(timingLabel(FlymeTiming.manual(c), zh));
         offset.setOnPreferenceClickListener(pref -> {
             showTimingDialog(offset, zh);
             return true;
         });
-        parent.addPreference(offset);
+        CheckBoxPreference follow = new CheckBoxPreference(c);
+        // Keep the checkbox widget from CheckBoxPreference; copy only the row layout and icon.
+        int checkboxWidget = follow.getWidgetLayoutResource();
+        matchRow(follow, mini);
+        follow.setWidgetLayoutResource(checkboxWidget);
+        follow.setKey(FlymeTiming.FOLLOW_KEY);
+        follow.setPersistent(false);
+        follow.setTitle(zh ? "状态栏歌词跟随 MediaSession 偏移" : "Use MediaSession timing for status bar lyrics");
+        follow.setSummary(zh ? "使用上方迷你播放器和媒体会话的偏移值。" : "Use the mini-player and media session offset above.");
+        follow.setChecked(FlymeTiming.follows(c));
+        offset.setEnabled(!follow.isChecked());
+        follow.setOnPreferenceChangeListener((pref, value) -> {
+            boolean checked = Boolean.TRUE.equals(value);
+            FlymeTiming.setFollow(c, checked);
+            offset.setEnabled(!checked);
+            return true;
+        });
+        insertAfter(timingParent, miniTiming, follow, offset);
+    }
+    // PreferenceGroup breaks order ties by title, which varies with the UI language.
+    // Reserve actual positions within this category while preserving sibling order.
+    private static void insertAfter(PreferenceGroup group, Preference anchor, Preference... rows) {
+        ArrayList<Preference> ordered = new ArrayList<>();
+        for (int i = 0; i < group.getPreferenceCount(); i++) {
+            Preference child = group.getPreference(i);
+            ordered.add(child);
+            if (child == anchor) java.util.Collections.addAll(ordered, rows);
+        }
+        for (int i = 0; i < ordered.size(); i++) ordered.get(i).setOrder(i);
+        for (Preference row : rows) group.addPreference(row);
     }
     // Use the active official layout and icon variant, including icon-free preferences.
     private static void matchRow(Preference row, Preference example) {
@@ -68,7 +99,7 @@ public final class FlymePreference {
     // Adapted from Morphe SeekBarPreference (GPL-3.0, see NOTICE).
     private static void showTimingDialog(Preference pref, boolean zh) {
         Context c = pref.getContext();
-        int saved = FlymeTiming.setting(c);
+        int saved = FlymeTiming.manual(c);
         int gap = Math.round(8 * c.getResources().getDisplayMetrics().density);
         TypedValue themeColor = new TypedValue();
         c.getTheme().resolveAttribute(android.R.attr.colorAccent, themeColor, true);
@@ -83,7 +114,7 @@ public final class FlymePreference {
         slider.setMax(2 * FlymeTiming.LIMIT / FlymeTiming.STEP);
         slider.setProgressTintList(accent);
         slider.setThumbTintList(accent);
-        slider.setProgress(progress(saved == FlymeTiming.FOLLOW ? FlymeTiming.DEFAULT : saved));
+        slider.setProgress(progress(saved));
         value.setText(sliderValue(slider) + "ms");
         slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar bar, int pos, boolean user) { value.setText(sliderValue(bar) + "ms"); }
@@ -109,18 +140,9 @@ public final class FlymePreference {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(0, gap, 0, gap);
         content.addView(row, MATCH_PARENT, WRAP_CONTENT);
-        CheckBox follow = new CheckBox(c);
-        follow.setText(zh ? "跟随官方" : "Use official timing");
-        follow.setOnCheckedChangeListener((button, checked) -> {
-            slider.setEnabled(!checked);
-            value.setVisibility(checked ? android.view.View.INVISIBLE : android.view.View.VISIBLE);
-        });
-        follow.setChecked(saved == FlymeTiming.FOLLOW);
-        content.addView(follow, MATCH_PARENT, WRAP_CONTENT);
         Pair<Dialog, LinearLayout> dialog = CustomDialog.create(c, pref.getTitle(), null, null, null,
-                () -> saveTiming(pref, follow.isChecked() ? FlymeTiming.FOLLOW : sliderValue(slider), zh),
+                () -> saveTiming(pref, sliderValue(slider), zh),
                 () -> {}, zh ? "重置" : "Reset", () -> {
-                    follow.setChecked(false);
                     slider.setProgress(progress(FlymeTiming.DEFAULT));
                 }, false);
         dialog.second.addView(content, 1);
@@ -139,7 +161,6 @@ public final class FlymePreference {
         pref.setSummary(timingLabel(ms, zh));
     }
     private static String timingLabel(int ms, boolean zh) {
-        if (ms == FlymeTiming.FOLLOW) return zh ? "跟随官方迷你播放器和媒体会话" : "Use mini-player and media session timing";
         if (ms == 0) return zh ? "0 ms（无偏移）" : "0 ms (no offset)";
         return (ms > 0 ? "+" : "") + ms + " ms" + (zh ? (ms < 0 ? "（提前）" : "（延后）") : (ms < 0 ? " (early)" : " (late)"));
     }
