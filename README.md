@@ -1,6 +1,6 @@
 # YouTube Music 魅族状态栏歌词
 
-在 Flyme 状态栏显示 YouTube Music 正在播放的歌词。歌词来自 Morphe 官方的 **Third-party lyrics**，可以单独开关，无需开启迷你播放器或锁屏歌词。
+在 Flyme 状态栏显示 YouTube Music 的同步歌词，歌词来自 Morphe 官方的 **Third-party lyrics**。
 
 [添加到 Morphe](https://morphe.software/add-source?github=kljjh/flyme-lyrics-patches&name=Flyme%20Lyrics&app=com.google.android.apps.youtube.music&appName=YouTube%20Music) · [下载补丁包](https://github.com/kljjh/flyme-lyrics-patches/releases/latest)
 
@@ -19,7 +19,7 @@ https://raw.githubusercontent.com/kljjh/flyme-lyrics-patches/main/patches-bundle
 ## 歌词设置
 
 - **魅族状态栏歌词**：默认开启。暂停播放或没有匹配的同步歌词时，状态栏歌词会清除。
-- **状态栏歌词时间偏移**：位于官方「迷你播放器和媒体会话时间偏移」正下方。打开后，**跟随 MediaSession 时间偏移**复选框默认勾选，状态栏使用官方媒体偏移值（默认 −800 ms），全局歌词校时仍独立生效。
-- 想只调状态栏时，取消勾选，用滑块选择 −2000 至 +2000 ms（每档 100 ms），然后点确定。负值提前，正值延后，0 表示不额外偏移。
+- **状态栏歌词时间偏移**：位于官方「迷你播放器和媒体会话时间偏移」正下方。默认跟随 MediaSession 偏移（官方默认 −800 ms）。
+  取消勾选后，可在 −2000 至 +2000 ms 间按 100 ms 调节。负值提前，正值延后。
 
 本项目为独立社区补丁。歌词由 [Morphe](https://github.com/MorpheApp/morphe-patches) 提供，状态栏显示使用[魅族公开接口](https://open.flyme.cn/docs?id=239)。许可见 [GPLv3](LICENSE) 和 [NOTICE](NOTICE)。
