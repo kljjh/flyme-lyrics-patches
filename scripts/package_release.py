@@ -49,8 +49,8 @@ def package(repository):
         "version": version,
         # Morphe's LocalDateTime parser expects an ISO timestamp without a zone suffix.
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
-        "description": f"Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official {config['official_version']}. Does not bundle official patches. Device validation pending.",
-        "download_url": f"https://github.com/{repository}/releases/download/v{version}/{target.name}",
+        "description": f"Independent Flyme add-on. Also select Third-party lyrics from the OFFICIAL Morphe source. Tested against official {config['official_version']}. Does not bundle official patches. Prior Flyme operation confirmed on device; independent switch on by default.",
+        "download_url": f"https://raw.githubusercontent.com/{repository}/main/bundles/{target.name}",
         "signature_download_url": "",
         "public_key": None,
     }
@@ -64,7 +64,7 @@ def package(repository):
     with tarfile.open(dist / f"flyme-lyrics-patches-{version}-sources.tar.gz", "w:gz") as archive:
         for name in sorted(set(filter(None, paths))):
             path = ROOT / name
-            if path.is_file():
+            if path.is_file() and not name.startswith("bundles/"):
                 archive.add(path, arcname=f"flyme-lyrics-patches-{version}/{name}")
     print(f"Validated {target.name}: {digest}")
 

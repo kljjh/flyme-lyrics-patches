@@ -17,13 +17,11 @@ The add-on instead loads independently, then in **finalize**, after every select
 
 ## Bytecode adapter
 
-The adapter checks exact method signatures and hook shapes before editing. It adds four helpers inside the injected official LockScreenLyrics class and hooks:
+The adapter forwards official playback and metadata events to the Flyme controller, installs an Android switch next to the mini-player preference, and observes official settings changes. It does not intercept mini-player rendering. The default-on preference is stored separately and takes effect without restarting playback.
 
-- The actual `MiniplayerLyrics.update()` `getCurrentLineText()` result, so it uses exactly the official mini-player text. The official mini-player switch is the required source gate.
-- Native metadata and playback events, for prompt track/session/pause/stop cleanup.
-- The mini-player restore path and the official settings initialization path.
+The independent 300 ms main-thread ticker follows the official `MiniplayerLyrics.update()` line-selection rules: clean the displayed artist/title with `MetadataCleaner`, require synced lyrics and a matching track, then use `LyricsManager.getCurrentLineText()` or the original title on a null result. The official third-party master switch remains authoritative. Compile-only declarations in `official-api/` bind to methods in the official DEX; no provider, network call or official class is packaged in the add-on.
 
-The bridge takes Android Context, MediaSession, MediaMetadata, PlaybackState and text as parameters. Its own runtime has no imports from the official lyrics code, no provider, no separate ticker and no network access. The official `morphe_music_lyrics_miniplayer` setting controls whether the text hook runs.
+The app-scoped README link and manual repository URLs both resolve to the same main-branch JSON in Manager. The release workflow commits the versioned MPP and manifest together. Source downloads stay on the raw metadata host, with identical Release bytes for local import. This removes a possible cross-host failure without claiming to diagnose an individual phone. See [Manager docs](https://github.com/MorpheApp/morphe-manager/blob/main/docs/patch-sources.md) and the [Breal example](https://github.com/brealorg/breal-morphe-patches).
 
 Tested official fixture: Morphe Patches v2.1.0, source commit `8fa2c7a1a832498de8f179748998a3ca87e198eb`.
 Artifact SHA-256: `114eafa139ea3018f35af3498e8e67fe7850d4dd22a6065a02e891699dcc5e96`.
