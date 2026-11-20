@@ -2,6 +2,8 @@ package io.github.kljjh.flymelyrics
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
+import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
@@ -101,6 +103,36 @@ internal object OfficialHooks {
         requireApi(mgr, "areLyricsSynced", emptyList(), "Z", false)
         requireApi(mgr, "getCurrentLineText", emptyList(), string, false)
         for (name in listOf("title", "artist")) requireApi(track, name, emptyList(), string, false)
+    }
+    const val FORMATTER = "Lapp/morphe/extension/music/patches/lyrics/model/MiniLyricsFormatter;"
+    const val PRESENTATION = "Lapp/morphe/extension/music/patches/lyrics/LyricsPresentation;"
+    private const val TIMING = "Lio/github/kljjh/flymelyrics/FlymeTiming;"
+    fun instrumentTiming(formatter: MutableClass, presentation: MutableClass) {
+        val string = "Ljava/lang/String;"
+        val params = listOf(string, "Lapp/morphe/extension/music/patches/lyrics/model/LyricsLine;", string, string)
+        fun target(cls: MutableClass, name: String, args: List<String>, result: String) = cls.methods.singleOrNull {
+            it.name == name && it.parameterTypes.map { type -> type.toString() } == args && it.returnType == result &&
+                AccessFlags.STATIC.isSet(it.accessFlags) && it.implementation != null
+        } ?: throw PatchException("Unsupported official timing method: ${cls.type}->$name")
+        val select = target(formatter, "selectionPosition", listOf("J", "I"), "J")
+        val present = target(presentation, "present", params, string)
+        val mini = target(presentation, "miniLine", listOf("Lapp/morphe/extension/music/patches/lyrics/model/Lyrics;", "J", "J", string, string), string)
+        if (mini.calls(FORMATTER, "selectionPosition", listOf("J", "I"), "J").size != 1 ||
+            mini.calls(PRESENTATION, "present", params, string).isEmpty() || present.implementation!!.registerCount <= params.size ||
+            select.implementation!!.registerCount > 255 || present.implementation!!.registerCount > 255)
+            throw PatchException("Unsupported official mini-player timing layout")
+        select.addInstructions(0, """
+            invoke-static/range {p2 .. p2}, $TIMING->offset(I)I
+            move-result p2
+        """)
+        // present() also advances the official artist/subtitle carousel. A Flyme-only
+        // read at a different position must return the text without advancing it.
+        present.addInstructionsWithLabels(0, """
+            invoke-static {}, $TIMING->isStatusRead()Z
+            move-result v0
+            if-eqz v0, :official
+            return-object p0
+        """, ExternalLabel("official", present.implementation!!.instructions.first()))
     }
     const val PREFS = "Lapp/morphe/extension/music/settings/preference/MusicPreferenceFragment;"
     fun instrumentSettings(mini: MutableClass, prefs: MutableClass) {

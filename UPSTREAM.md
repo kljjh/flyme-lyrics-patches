@@ -21,6 +21,8 @@ The adapter forwards official playback and metadata events to the Flyme controll
 
 The independent 300 ms main-thread ticker follows the official `MiniplayerLyrics.update()` line-selection rules: clean the displayed artist/title with `MetadataCleaner`, require synced lyrics and a matching track, then use `LyricsManager.getCurrentLineText()` or the original title on a null result. The official third-party master switch remains authoritative. Compile-only declarations in `official-api/` bind to methods in the official DEX; no provider, network call or official class is packaged in the add-on.
 
+Only during a synchronous Flyme lookup, the official selectionPosition function receives the Flyme offset (default −800 ms) in place of the mini-player offset. Other readers keep the official value, and Flyme reads skip updates to the shared artist-frame carousel. Global and per-track corrections remain part of the original playback position.
+
 The app-scoped README link and manual repository URLs both resolve to the same main-branch JSON in Manager. The release workflow commits the versioned MPP and manifest together. Source downloads stay on the raw metadata host, with identical Release bytes for local import. This removes a possible cross-host failure without claiming to diagnose an individual phone. See [Manager docs](https://github.com/MorpheApp/morphe-manager/blob/main/docs/patch-sources.md) and the [Breal example](https://github.com/brealorg/breal-morphe-patches).
 
 Tested official fixture: Morphe Patches v2.1.0, source commit `8fa2c7a1a832498de8f179748998a3ca87e198eb`.

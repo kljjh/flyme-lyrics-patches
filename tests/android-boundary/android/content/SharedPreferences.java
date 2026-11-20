@@ -1,2 +1,2 @@
 package android.content;
-public class SharedPreferences { private Boolean saved; public boolean getBoolean(String k,boolean def){return saved==null?def:saved;} public SharedPreferences edit(){return this;} public SharedPreferences putBoolean(String k,boolean v){saved=v;return this;} public void apply(){} }
+public class SharedPreferences { private Boolean saved; private Integer timing; public int getInt(String k,int d){return timing==null?d:timing;} public SharedPreferences putInt(String k,int v){timing=v;return this;} public boolean getBoolean(String k,boolean def){return saved==null?def:saved;} public SharedPreferences edit(){return this;} public SharedPreferences putBoolean(String k,boolean v){saved=v;return this;} public void apply(){} }

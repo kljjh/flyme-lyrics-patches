@@ -10,6 +10,7 @@
 2. [添加本项目来源](https://morphe.software/add-source?github=kljjh/flyme-lyrics-patches&name=Flyme%20Lyrics&app=com.google.android.apps.youtube.music&appName=YouTube%20Music)（仅 YouTube Music）。如果该应用曾被排除，链接可将它加回来源。也可把下方 JSON 地址粘贴到「来源 → ＋ → 远程」。
 3. 选择原版 YouTube Music APK，建议 `9.30.53`。在**同一次修补**中勾选官方来源的 **Third-party lyrics** 和本来源的 **Flyme status bar lyrics**。GmsCore、后台播放等其他补丁仍从官方来源选择。
 4. 安装后，在官方 Morphe 歌词设置中启用**第三方歌词**。在同一歌词设置页找到**魅族状态栏歌词**（默认开启）。**显示迷你播放器歌词**可开可关；两个开关互不影响。
+   「状态栏歌词时间偏移」默认 **−800 ms（提前 0.8 秒）**，范围 −2000 至 +2000 ms，每档 100 ms。设为 0 取消状态栏偏移，正值延后；也可点「跟随官方」。独立值替代迷你播放器偏移，保留全局和单曲校时。
 5. 在 Flyme 中允许应用媒体通知和状态栏歌词，名称依系统版本而异。
 
 Morphe 目前不会跨来源自动勾选依赖，两个补丁需要手动选中。漏选官方歌词补丁会报出明确的提示，不会生成一个声称成功但没有歌词接入的版本。

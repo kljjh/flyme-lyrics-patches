@@ -37,6 +37,7 @@ val flymeLyricsPatch = patch(
         OfficialHooks.validateReader { classDefByOrNull(it) }
         OfficialHooks.instrument(mutableClassDefBy(official))
         val prefs = classDefByOrNull(OfficialHooks.PREFS) ?: throw PatchException("Unsupported official music settings screen")
+        OfficialHooks.instrumentTiming(mutableClassDefBy(OfficialHooks.FORMATTER), mutableClassDefBy(OfficialHooks.PRESENTATION))
         OfficialHooks.instrumentSettings(mutableClassDefBy(miniplayer), mutableClassDefBy(prefs))
     }
 }

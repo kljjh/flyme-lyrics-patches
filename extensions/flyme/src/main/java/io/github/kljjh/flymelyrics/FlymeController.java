@@ -62,7 +62,7 @@ public final class FlymeController {
         scheduled = false;
         try {
             if (!active()) { FlymeLyrics.clear(app); return; }
-            FlymeLyrics.onLine(app, session.get(), FlymeSource.currentLine(displayed, rawTitle));
+            FlymeLyrics.onLine(app, session.get(), FlymeTiming.line(app, displayed, rawTitle));
             scheduled = handler.postDelayed(task, 300); // Official LyricsTicker cadence.
         } catch (RuntimeException | LinkageError e) { FlymeLyrics.clear(app); report(e); }
     }

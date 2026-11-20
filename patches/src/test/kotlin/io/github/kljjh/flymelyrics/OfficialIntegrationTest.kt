@@ -55,11 +55,16 @@ class OfficialIntegrationTest {
         assertThrows(PatchException::class.java) { OfficialHooks.validateReader { null } }
         OfficialHooks.instrument(cls)
         OfficialHooks.instrumentSettings(miniplayer, prefs)
-        val changed = listOf(cls, miniplayer, prefs)
+        val fmt = MutableClass(all.single { it.type == OfficialHooks.FORMATTER })
+        val presentation = MutableClass(all.single { it.type == OfficialHooks.PRESENTATION })
+        OfficialHooks.instrumentTiming(fmt, presentation)
+        val changed = listOf(cls, miniplayer, prefs, fmt, presentation)
         val refs = changed.flatMap { it.methods }.flatMap { m -> m.implementation?.instructions?.mapNotNull {
             ((it as? ReferenceInstruction)?.reference as? MethodReference)?.toString() }.orEmpty() }
         for (name in listOf("onMetadata", "onPlaybackState", "refresh")) assertTrue(refs.any { it.startsWith("${OfficialHooks.BRIDGE}->$name(") })
         assertTrue(refs.any { it.contains("FlymePreference;->install(") })
+        assertTrue(refs.any { it.endsWith("FlymeTiming;->offset(I)I") })
+        assertTrue(refs.any { it.endsWith("FlymeTiming;->isStatusRead()Z") })
         val store = MemoryDataStore()
         DexPool.writeTo(store, ImmutableDexFile(Opcodes.getDefault(), changed))
         assertEquals(changed.map { it.type }.toSet(), DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(store.data)).classes.map { it.type }.toSet())
